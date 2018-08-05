@@ -58,7 +58,7 @@
 			});
 
 			var led_particle_geo = new THREE.BufferGeometry();
-			led_particle_geo.addAttribute('color', new THREE.Float32BufferAttribute(colours, 3));
+			led_particle_geo.addAttribute('color', new THREE.Float32BufferAttribute(colours, 3).setDynamic(true));
 
 			// Load the LED geometry
 			var loader = new THREE.FileLoader();
@@ -96,6 +96,27 @@
 			}
 
 			animate();
+
+		function animate() {
+			requestAnimationFrame( animate );
+			render();
+		}
+
+		function updateColours() {
+			var colours = led_particle_geo.attributes.color.array;
+			for ( var i = 0; i < 10520; i++ ) {
+				var randVal = Math.random();
+				colours[3 * i] = randVal > 0.25 ? 1.0 : 0.0;
+				colours[3 * i + 1] = randVal > 0.5 ? 1.0 : 0.0;
+				colours[3 & i + 2] = randVal > 0.75 ? 1.0 : 0.0;
+			}
+			led_particle_geo.attributes.color.needsUpdate = true;
+		}
+
+		function render() {
+			updateColours();
+			renderer.render( scene, camera );
+		}
 		</script>
 	</body>
 </html>

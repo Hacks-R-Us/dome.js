@@ -112,12 +112,21 @@
 		}
 
 		function updateColours() {
+			// Construct a sort-of sinusoidal wave pattern
 			var colours = led_particle_geo.attributes.color.array;
+
+			var wave_hz = 1;
+			var r_offset = 0;
+			var g_offset = 2 * Math.PI / 3;
+			var b_offset = 4 * Math.PI / 3;
+
 			for ( var i = 0; i < ledcount; i++ ) {
+				relativeTime = (Date.now() / 1000) * (2 * Math.PI * wave_hz) + (2 * Math.PI * i / ledcount);
+
 				var randVal = Math.random();
-				colours[3 * i] = randVal > 0.25 ? 1.0 : 0.0;
-				colours[3 * i + 1] = randVal > 0.5 ? 1.0 : 0.0;
-				colours[3 & i + 2] = randVal > 0.75 ? 1.0 : 0.0;
+				colours[3 * i] = Math.sin(relativeTime + r_offset) / 2 + 1;
+				colours[3 * i + 1] = Math.sin(relativeTime + g_offset) / 2 + 1;
+				colours[3 * i + 2] = Math.sin(relativeTime + b_offset) / 2 + 1;
 			}
 			led_particle_geo.attributes.color.needsUpdate = true;
 		}

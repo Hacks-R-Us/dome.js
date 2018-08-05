@@ -24,9 +24,11 @@
 		</script>
 
 		<script type="x-shader/x-fragment" id="fragmentshader">
+			uniform sampler2D texture;
 			varying vec3 vColor;
 			void main() {
 				gl_FragColor = vec4( vColor, 1.0 );
+				gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
 			}
 		</script>
 
@@ -42,6 +44,10 @@
 			document.body.appendChild(renderer.domElement);
 
 			// Prepare the dome shader
+			var uniforms = {
+				texture:   { value: new THREE.TextureLoader().load( "spark1.png" ) }
+			};
+
 			var colours = [];
 
 			for (var i = 0; i < 10520; i++) {
@@ -49,6 +55,7 @@
 			}
 
 			var ledsmaterial = new THREE.ShaderMaterial( {
+				uniforms:       uniforms,
 				vertexShader:   document.getElementById( 'vertexshader' ).textContent,
 				fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
 				blending:       THREE.AdditiveBlending,

@@ -12,6 +12,24 @@
 		<script src="js/three.js"></script>
 		<script src="js/OrbitControls.js"></script>
 		<script src="js/dat.gui.min.js"></script>
+
+		<script type="x-shader/x-vertex" id="vertexshader">
+			varying vec3 vColor;
+			void main() {
+				vColor = color;
+				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+				gl_PointSize = 0.05 * ( 300.0 / -mvPosition.z );
+				gl_Position = projectionMatrix * mvPosition;
+			}
+		</script>
+
+		<script type="x-shader/x-fragment" id="fragmentshader">
+			varying vec3 vColor;
+			void main() {
+				gl_FragColor = vec4( vColor, 1.0 );
+			}
+		</script>
+
 		<script>
 			var scene = new THREE.Scene();
 			var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -23,13 +41,45 @@
 			renderer.setSize(window.innerWidth, window.innerHeight);
 			document.body.appendChild(renderer.domElement);
 
-			var geometry = new THREE.IcosahedronGeometry(1);
-			// geometry.rotateX(1);
-			var material = new THREE.MeshNormalMaterial();
-			//gui.addColor(material, 'color');
-			//material.wireframe = true;
-			var cube = new THREE.Mesh(geometry, material);
-			scene.add(cube);
+			// Prepare the dome shader
+			var colours = [];
+
+			for (var i = 0; i < 10520; i++) {
+				colours.push(1.0, 1.0, 1.0)
+			}
+
+			var ledsmaterial = new THREE.ShaderMaterial( {
+				vertexShader:   document.getElementById( 'vertexshader' ).textContent,
+				fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
+				blending:       THREE.AdditiveBlending,
+				depthTest:      false,
+				transparent:    true,
+				vertexColors:   true
+			});
+
+			var led_particle_geo = new THREE.BufferGeometry();
+			led_particle_geo.addAttribute('color', new THREE.Float32BufferAttribute(colours, 3));
+
+			// Load the LED geometry
+			var loader = new THREE.FileLoader();
+			loader.load(
+				'ledlist.json',
+
+				// onLoad callback
+				function ( data ) {
+					var leds = JSON.parse(data);
+
+					var leds_destructured = leds.reduce((wip, led) => wip.concat(led));
+
+					led_particle_geo.addAttribute('position', new THREE.Float32BufferAttribute(leds_destructured, 3));
+
+					var ledparticles = new THREE.Points(led_particle_geo, ledsmaterial);
+
+					ledparticles.rotation.x = -1 * Math.PI / 2;
+
+					scene.add(ledparticles);
+				},
+			);
 
 			var axesHelper = new THREE.AxesHelper( 5 );
 			scene.add( axesHelper );

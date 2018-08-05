@@ -43,6 +43,8 @@
 			renderer.setSize(window.innerWidth, window.innerHeight);
 			document.body.appendChild(renderer.domElement);
 
+			const ledcount = 10520;
+
 			// Prepare the dome shader
 			var uniforms = {
 				texture:   { value: new THREE.TextureLoader().load( "spark1.png" ) }
@@ -50,7 +52,7 @@
 
 			var colours = [];
 
-			for (var i = 0; i < 10520; i++) {
+			for (var i = 0; i < ledcount; i++) {
 				colours.push(1.0, 1.0, 1.0)
 			}
 
@@ -111,7 +113,7 @@
 
 		function updateColours() {
 			var colours = led_particle_geo.attributes.color.array;
-			for ( var i = 0; i < 10520; i++ ) {
+			for ( var i = 0; i < ledcount; i++ ) {
 				var randVal = Math.random();
 				colours[3 * i] = randVal > 0.25 ? 1.0 : 0.0;
 				colours[3 * i + 1] = randVal > 0.5 ? 1.0 : 0.0;

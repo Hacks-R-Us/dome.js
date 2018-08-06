@@ -98,16 +98,11 @@
 			camera.position.x = 5;
 			// camera.position.y = 3;
 
-			function animate() {
-				requestAnimationFrame(animate);
-				controls.update();
-				renderer.render(scene, camera);
-			}
-
 			animate();
 
 		function animate() {
 			requestAnimationFrame( animate );
+                        controls.update();
 			render();
 		}
 

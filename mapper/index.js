@@ -9,9 +9,11 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 
-// Prepare the dome shader
+//Prepare the dome shader
 var uniforms = {
-	texture:   { value: new THREE.TextureLoader().load( "../spark1.png" ) }
+	texture: {
+		value: new THREE.TextureLoader().load("../spark1.png")
+	}
 };
 
 var vertShader = `\
@@ -31,18 +33,18 @@ void main() {
 	gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
 }`
 
-var ledsmaterial = new THREE.ShaderMaterial( {
-	uniforms:       uniforms,
-	vertexShader:   vertShader,
+var ledsmaterial = new THREE.ShaderMaterial({
+	uniforms: uniforms,
+	vertexShader: vertShader,
 	fragmentShader: fragShader,
-	blending:       THREE.AdditiveBlending,
-	depthTest:      false,
-	transparent:    true,
-	vertexColors:   true
+	blending: THREE.AdditiveBlending,
+	depthTest: false,
+	transparent: true,
+	vertexColors: true
 });
 
 // Set up dome geometry
-var dome = new Dome(2,2.615)
+var dome = new Dome(2, 2.615, scene)
 var pointsList = dome.verticies()
 console.log(pointsList.length)
 
@@ -62,8 +64,8 @@ var ledparticles = new THREE.Points(led_particle_geo, ledsmaterial);
 ledparticles.rotation.x = -1 * Math.PI / 2;
 scene.add(ledparticles);
 
-var axesHelper = new THREE.AxesHelper( 5 );
-scene.add( axesHelper );
+var axesHelper = new THREE.AxesHelper(3);
+scene.add(axesHelper);
 
 gui.add(axesHelper, 'visible').name('Show Axes');
 
@@ -73,11 +75,11 @@ camera.position.x = 5;
 animate();
 
 function animate() {
-	requestAnimationFrame( animate );
-    controls.update();
+	requestAnimationFrame(animate);
+	controls.update();
 	render();
 }
 
 function render() {
-	renderer.render( scene, camera );
+	renderer.render(scene, camera);
 }

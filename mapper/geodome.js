@@ -1,8 +1,109 @@
+class Dome {
+    constructor(order, size, scene){
+        // Save the scale for later
+        this.scale = size
+        
+        // --== Calculate verticies ==--
+        // _verts is "private" and its order has to remain static for edge mapping
+        this._verts = initialize_sphere(order)
+        // Make the top vertex the center of the pentagonal section & scale
+        let ax = new THREE.Vector3(0,0,1)
+        this._verts.forEach(v => v.applyAxisAngle(ax,35*(180 / Math.PI)).multiplyScalar(this.scale))
+        // Cut off bottom of sphere to make DOME
+        this._verts = this._verts.filter(v => v.y >= -0.1)
+
+        // --== Find edges ==--
+        this._edges = []
+        for(let i=0; i<this._verts.length; i++){
+            let neighbors = this.getNeighbors(i)
+            for(let n of neighbors){
+                this.addEdge([i,n])
+            }
+        }
+
+        // --== Set up THREE geometry ==--
+        // Verticies
+        let vertexCollisionMesh = new THREE.SphereBufferGeometry(0.1, 6, 4)
+        let collisionMeshMaterial = new THREE.MeshBasicMaterial({visible: false})
+        //let collisionMeshMaterial = new THREE.MeshBasicMaterial({color: 0xffff00})
+        this._vertex_meshes = []
+        this._vertex_groups = []
+        console.log(this._verts)
+        console.log(this._edges)
+        for(let v of this._verts){
+            let sphere = new THREE.Mesh(vertexCollisionMesh, collisionMeshMaterial)
+            sphere.position.set(v.x,v.y,v.z)
+            scene.add(sphere)
+            this._vertex_meshes.push(sphere)
+        }
+
+        // Edges
+        let lineMaterial = new THREE.LineBasicMaterial({color: 0x666666})
+        for(let e of this._edges){
+            let lineGeometry = new THREE.BufferGeometry()
+            let linePositions = new Float32Array(6)
+            for(let i=0; i<2; i++){
+                linePositions[ i * 3     ] = this._verts[e[i]].x
+                linePositions[ i * 3 + 1 ] = this._verts[e[i]].y
+                linePositions[ i * 3 + 2 ] = this._verts[e[i]].z
+            }
+            lineGeometry.addAttribute('position', new THREE.BufferAttribute(linePositions, 3))
+            let line = new THREE.Line(lineGeometry, lineMaterial)
+            scene.add(line)
+        }
+
+    }
+
+    addEdge(edge){
+        let e = edge.slice().sort()
+        let found = this._edges.find(a => a[0] == e[0] && a[1] == e[1])
+        if(typeof found === "undefined"){
+            this._edges.push(e)
+        }
+    }
+
+    verticies(){
+        let verts = []
+        for(let v of this._verts){
+            verts.push([v.x,-v.z,v.y])
+        }
+        return verts
+    }
+
+    getVertexByPosition(v){
+        
+    }
+
+    getNeighbors(vertexID){
+        // Get all distances to other points
+        let distances = []
+        for(let v of this._verts){
+            distances.push(this._verts[vertexID].distanceToSquared(v))
+        }
+        // Find single-strut approx. dist
+        let smallest_dist = distances.slice().sort()[1]
+        // Get indicies of single-strut neighbors
+        let neighbors = []
+        for(let i=0; i<this._verts.length; i++){
+            if(distances[i] != 0 && distances[i] < smallest_dist * 1.8){
+                neighbors.push(i)
+            }
+        }
+        return neighbors
+    }
+
+    render(){
+        // Render lines / LEDs between neighboring verticies 
+    }
+
+    // TODO: come up with good way to identify verticies
+    // i.e: how do sort this list??
+}
+
 function isNewPoint(l, p){
     let found = l.find(function(x){
         return x.equals(p)
     })
-    console.log(typeof found === "undefined")
     return typeof found === "undefined"
 }
 
@@ -40,7 +141,7 @@ function initialize_sphere(depth){
     let verts = verticies.map(v => new THREE.Vector3(v[0],v[1],v[2]))
     // Faces (Vertex index mappings)
     let faces = [
-        [0, 4, 1], [ 0, 9, 4 ], [ 9, 5, 4 ], [ 4, 5, 8 ], [ 4, 8, 1 ],
+        [ 0, 4, 1], [ 0, 9, 4 ], [ 9, 5, 4 ], [ 4, 5, 8 ], [ 4, 8, 1 ],
         [ 8, 10, 1 ], [ 8, 3, 10 ], [ 5, 3, 8 ], [ 5, 2, 3 ], [ 2, 7, 3 ],
         [ 7, 10, 3 ], [ 7, 6, 10 ], [ 7, 11, 6 ], [ 11, 0, 6 ], [ 0, 1, 6 ],
         [ 6, 1, 10 ], [ 9, 0, 11 ], [ 9, 11, 2 ], [ 9, 2, 5 ], [ 7, 2, 11 ]
@@ -50,41 +151,4 @@ function initialize_sphere(depth){
         subdivide(verts[f[0]], verts[f[1]], verts[f[2]], points, depth)
     }
     return points
-}
-
-var up = new THREE.Vector3(1,0,0)
-
-class Dome {
-    constructor(order, size){
-        this.verts = initialize_sphere(order)
-        // Make the top vertex the center of the pentagonal section
-        this.verts.forEach(v => v.applyAxisAngle(up,35*(180 / Math.PI)).multiplyScalar(size))
-        // Cut off bottom of dome to make sphere
-        this.verts = this.verts.filter(v => v.z >= -0.1)
-        // Save the scale for later
-        this.scale = size
-    }
-
-    verticies(){
-        let verts = []
-        for(let v of this.verts){
-            verts.push([v.x,v.y,v.z])
-        }
-        return verts
-    }
-
-    getVertexByPosition(v){
-        
-    }
-
-    getNeighbors(vertexID){
-        // Just grab all the distances, look at the smallest, * by 1.5ish and that's yer threshold
-    }
-
-    render(){
-        // Render lines / LEDs between neighboring verticies 
-    }
-
-    // TODO: come up with good way to identify verticies
-    // i.e: how do sort this list??
 }

@@ -14,12 +14,17 @@ class Dome {
 
         // --== Find edges ==--
         this._edges = []
+        this._strut_types = []
         for(let i=0; i<this._verts.length; i++){
             let neighbors = this.getNeighbors(i)
             for(let n of neighbors){
                 this.addEdge([i,n])
             }
         }
+        this._strut_types.sort()
+        // Convert edges to struts
+            // TODO: move line geometry into strut class
+            
 
         // --== Set up THREE geometry ==--
         // Verticies
@@ -87,6 +92,10 @@ class Dome {
         for(let i=0; i<this._verts.length; i++){
             if(distances[i] != 0 && distances[i] < smallest_dist * 1.8){
                 neighbors.push(i)
+                let strutLen = Math.round(distances[i] * 1000) / 1000
+                if(!this._strut_types.includes(strutLen)){
+                    this._strut_types.push(strutLen)
+                }
             }
         }
         return neighbors

@@ -13,6 +13,7 @@ class Dome {
         this._verts = this._verts.filter(v => v.y >= -0.1)
 
         // --== Find edges ==--
+        this._struts = []
         this._edges = []
         this._strut_types = []
         for(let i=0; i<this._verts.length; i++){
@@ -23,7 +24,9 @@ class Dome {
         }
         this._strut_types.sort()
         // Convert edges to struts
-            // TODO: move line geometry into strut class
+        for (let e of this._edges){
+            this._struts.push(new Strut(this._verts[e[0]], this._verts[e[1]], this._strut_types))
+        }
             
 
         // --== Set up THREE geometry ==--
@@ -40,21 +43,6 @@ class Dome {
             sphere.position.set(v.x,v.y,v.z)
             scene.add(sphere)
             this._vertex_meshes.push(sphere)
-        }
-
-        // Edges
-        let lineMaterial = new THREE.LineBasicMaterial({color: 0x666666})
-        for(let e of this._edges){
-            let lineGeometry = new THREE.BufferGeometry()
-            let linePositions = new Float32Array(6)
-            for(let i=0; i<2; i++){
-                linePositions[ i * 3     ] = this._verts[e[i]].x
-                linePositions[ i * 3 + 1 ] = this._verts[e[i]].y
-                linePositions[ i * 3 + 2 ] = this._verts[e[i]].z
-            }
-            lineGeometry.addAttribute('position', new THREE.BufferAttribute(linePositions, 3))
-            let line = new THREE.Line(lineGeometry, lineMaterial)
-            scene.add(line)
         }
 
     }
@@ -83,14 +71,14 @@ class Dome {
         // Get all distances to other points
         let distances = []
         for(let v of this._verts){
-            distances.push(this._verts[vertexID].distanceToSquared(v))
+            distances.push(this._verts[vertexID].distanceTo(v))
         }
         // Find single-strut approx. dist
         let smallest_dist = distances.slice().sort()[1]
         // Get indicies of single-strut neighbors
         let neighbors = []
         for(let i=0; i<this._verts.length; i++){
-            if(distances[i] != 0 && distances[i] < smallest_dist * 1.8){
+            if(distances[i] != 0 && distances[i] < smallest_dist * 1.5){
                 neighbors.push(i)
                 let strutLen = Math.round(distances[i] * 1000) / 1000
                 if(!this._strut_types.includes(strutLen)){

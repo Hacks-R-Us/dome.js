@@ -1,51 +1,53 @@
 var STRUTS = {
-	"A": {"length": 66.2, "leds": 30, "hue": 0  },
-	"B": {"length": 77.2, "leds": 41, "hue": 240},
-	"C": {"length": 77.0, "leds": 41, "hue": 120},
-	"D": {"length": 81.8, "leds": 44, "hue": 60 },
-	"E": {"length": 85.0, "leds": 46, "hue": 300},
-	"F": {"length": 78.1, "leds": 42, "hue": 180},
+	"A": {"length": .662, "leds": 30, "color": 0xff0000},
+	"BC":{"length": .772, "leds": 41, "color": 0x00ffff},
+	"D": {"length": .818, "leds": 44, "color": 0xffff00},
+	"E": {"length": .850, "leds": 46, "color": 0xff00ff},
+	"F": {"length": .781, "leds": 42, "color": 0xaaaaaa},
 }
-
+var TYPES = ["A","BC","D","E","F"]
+//var lineMaterial = new THREE.LineBasicMaterial({color: 0x666666})
 class Strut {
-	constructor(name){
-		this.name = name
-		// Position
-		this._base = new THREE.Vector3(0,0,0)
-		this.tail = new THREE.Vector3(this.length,0,0)
+	constructor(v1, v2, types){
+		// Set points of ends
+		this._start = v1.clone()
+		this._end = v2.clone()
+		
+		// Determine Strut type
+		let len = v1.distanceTo(v2)
+		let roundedLen = Math.round(len*1000)/1000
+		let index = types.indexOf(roundedLen)
+		if(index == -1) 
+			throw new Error("No strut type with this length!")
+		this.strutType = TYPES[index]
+
+		// Create geometry
+        this._geometry = new THREE.BufferGeometry()
+        let linePositions = new Float32Array(6)
+        let lineMaterial = new THREE.LineBasicMaterial({color: this.color})
+        linePositions.set([v1.x,v1.y,v1.z,v2.x,v2.y,v2.z])
+        this._geometry.addAttribute('position', new THREE.BufferAttribute(linePositions, 3))
+        this._line = new THREE.Line(this._geometry, lineMaterial)
+        scene.add(this._line)
 	}
 
 	// Properties
-	get length(){
-		return STRUTS[this.name].length
+	get leds()   {return STRUTS[this.strutType].leds}
+	get color()  {return STRUTS[this.strutType].color}
+	set color(c) {
+		this._line.material = new THREE.Color(c)
+		this._line.material.needsUpate = true
+		console.log("Set the color!",c)
 	}
-	get leds(){
-		return STRUTS[this.name].leds
-	}
-	get color(){
-		return STRUTS[this.name].hue
-	}
-
-	set base(vec){
-		this._base = vec.clone()
-	}
-	set direction(vec){
-		this.tail = vec.clone()
-		this.tail.setLength(this.length)
-	}
-	get end(){
-		return this._base.clone().add(this.tail)
-	}
-	get center(){
-		return this._base.clone().add(this.tail.clone().multiplyScalar(0.5))
-	}
+	// Vectory properties
+	get start()  {return this._start.clone()}
+	set start(v) {this._start = v.clone()}
+	get end()    {return this._end.clone()}
+	set end(v)   {this._end = v.clone()}
+	get length() {return this.start.distanceTo(this.end)}
+	get center() {return this.end.add(this.start).divideScalar(2)}
 
 	// Methods
-	render2D() {
-		stroke(this.color,1,1)
-		let end = this.end
-		line(this._base.x, this._base.y, end.x, end.y)
-	}
 	rotateAround(axis, amount){
 		let newBase = this._base.rotateAround(axis, amount)
 		let newTail = this._base.rotateAround(axis, amount)

@@ -44,7 +44,7 @@ var ledsmaterial = new THREE.ShaderMaterial({
 });
 
 // Set up dome geometry
-var dome = new Dome(2, 2.8, scene)
+var dome = new Dome(2, 2.5, scene)
 var pointsList = dome.verticies()
 console.log(pointsList.length)
 

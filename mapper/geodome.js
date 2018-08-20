@@ -1,9 +1,13 @@
+var VERT_COLOR = 0x333333
+var VERT_HOVER = 0xcccccc
+
 class Dome {
     constructor(order, size, scene){
         // Save the scale for later
         this.scale = size
+        this._hover = null
         
-        // --== Calculate verticies ==--
+        // --== Calculate vertices ==--
         // _verts is "private" and its order has to remain static for edge mapping
         this._verts = initialize_sphere(order)
         // Make the top vertex the center of the pentagonal section & scale
@@ -25,46 +29,75 @@ class Dome {
         this._strut_types.sort()
         // Convert edges to struts
         for (let e of this._edges){
+            e = JSON.parse("[" + e + "]")
             this._struts.push(new Strut(this._verts[e[0]], this._verts[e[1]], this._strut_types))
         }
-            
+        // Correct for F and A struts somehow being the same length (??)
+        for(let i=0; i<this._verts.length; i++){
+            let pentCorners = this.getNeighbors(i)
+            if(pentCorners.length == 5){
+                for(let n of pentCorners){
+                    let edgeID = this._edges.indexOf(String([i,n].sort()))
+                    this._struts[edgeID].type = "A"
+                }
+            }
+        }
 
         // --== Set up THREE geometry ==--
-        // Verticies
-        let vertexCollisionMesh = new THREE.SphereBufferGeometry(0.1, 6, 4)
-        let collisionMeshMaterial = new THREE.MeshBasicMaterial({visible: false})
-        //let collisionMeshMaterial = new THREE.MeshBasicMaterial({color: 0xffff00})
+        // Edges
+        this._struts.forEach(s => s.initGeometry())
+        // Vertices
+        let vertexCollisionMesh = new THREE.SphereBufferGeometry(0.15, 6, 4)
+        //let collisionMeshMaterial = new THREE.MeshBasicMaterial({visible: false})
+        let collisionMeshMaterial = new THREE.MeshBasicMaterial({color: VERT_COLOR})
         this._vertex_meshes = []
-        this._vertex_groups = []
-        console.log(this._verts)
-        console.log(this._edges)
         for(let v of this._verts){
-            let sphere = new THREE.Mesh(vertexCollisionMesh, collisionMeshMaterial)
+            let sphere = new THREE.Mesh(vertexCollisionMesh.clone(), collisionMeshMaterial.clone())
             sphere.position.set(v.x,v.y,v.z)
             scene.add(sphere)
             this._vertex_meshes.push(sphere)
+            this._vertex_meshes_ids = this._vertex_meshes.map(m => m.uuid)
         }
 
     }
 
+    get hover()   { return this._hover }
+    set hover(vID){
+        if(vID != this._hover){
+            if (this.hover != null)
+                this._vertex_meshes[this.hover].material.color.setHex(VERT_COLOR)
+            this._hover = vID
+            if (this.hover != null)
+                this._vertex_meshes[this.hover].material.color.setHex(VERT_HOVER)
+        }
+    }
+
     addEdge(edge){
-        let e = edge.slice().sort()
-        let found = this._edges.find(a => a[0] == e[0] && a[1] == e[1])
-        if(typeof found === "undefined"){
+        let e = String(edge.slice().sort())
+        if(!this._edges.includes(e)){
             this._edges.push(e)
         }
     }
 
-    verticies(){
+    get vertices(){
         let verts = []
         for(let v of this._verts){
-            verts.push([v.x,-v.z,v.y])
+            verts.push([v.x,v.y,v.z])
         }
         return verts
     }
 
-    getVertexByPosition(v){
-        
+    getVerticesByMouse(){
+        raycaster.setFromCamera(mouse, camera)
+        let objects = raycaster.intersectObjects(this._vertex_meshes, true)
+        let vertices = []
+        for(let o of objects){
+            let index = this._vertex_meshes_ids.indexOf(o.object.uuid)
+            if(index != -1){
+                vertices.push(index)
+            }
+        }
+        return vertices
     }
 
     getNeighbors(vertexID){
@@ -80,7 +113,7 @@ class Dome {
         for(let i=0; i<this._verts.length; i++){
             if(distances[i] != 0 && distances[i] < smallest_dist * 1.5){
                 neighbors.push(i)
-                let strutLen = Math.round(distances[i] * 1000) / 1000
+                let strutLen = Math.round(distances[i] * 100000) / 100000
                 if(!this._strut_types.includes(strutLen)){
                     this._strut_types.push(strutLen)
                 }
@@ -89,11 +122,17 @@ class Dome {
         return neighbors
     }
 
-    render(){
-        // Render lines / LEDs between neighboring verticies 
+    update(){
+        // Hover over Verts
+        let hovers = this.getVerticesByMouse()
+        if(hovers.length > 0){
+            this.hover = hovers[0]
+        } else {
+            this.hover = null
+        }
     }
 
-    // TODO: come up with good way to identify verticies
+    // TODO: come up with good way to identify/order vertices
     // i.e: how do sort this list??
 }
 
@@ -129,13 +168,13 @@ function subdivide(vec1, vec2, vec3, sphere_points, depth){
 function initialize_sphere(depth){
     let X = .525731112119133606
     let Z = .850650808352039932
-    // Verticies of our icosahedron
-    let verticies = [
+    // Vertices of our icosahedron
+    let vertices = [
         [-X, 0.0, Z], [ X, 0.0, Z ], [ -X, 0.0, -Z ], [ X, 0.0, -Z ],
         [ 0.0, Z, X ], [ 0.0, Z, -X ], [ 0.0, -Z, X ], [ 0.0, -Z, -X ],
         [ Z, X, 0.0 ], [ -Z, X, 0.0 ], [ Z, -X, 0.0 ], [ -Z, -X, 0.0 ]
     ]
-    let verts = verticies.map(v => new THREE.Vector3(v[0],v[1],v[2]))
+    let verts = vertices.map(v => new THREE.Vector3(v[0],v[1],v[2]))
     // Faces (Vertex index mappings)
     let faces = [
         [ 0, 4, 1], [ 0, 9, 4 ], [ 9, 5, 4 ], [ 4, 5, 8 ], [ 4, 8, 1 ],

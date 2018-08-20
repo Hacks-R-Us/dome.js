@@ -5,6 +5,7 @@ var gui = new dat.GUI();
 gui.add(controls, 'autoRotate');
 
 var renderer = new THREE.WebGLRenderer();
+renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 

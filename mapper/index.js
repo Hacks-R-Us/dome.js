@@ -1,85 +1,47 @@
-var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-var controls = new THREE.OrbitControls(camera);
-var gui = new dat.GUI();
-gui.add(controls, 'autoRotate');
+var scene = new THREE.Scene()
+var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000)
+var controls = new THREE.OrbitControls(camera)
+var gui = new dat.GUI()
+gui.add(controls, 'autoRotate')
 
-var renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+// Initialize renderer
+var renderer = new THREE.WebGLRenderer()
+renderer.setSize(window.innerWidth, window.innerHeight)
+renderer.setPixelRatio( window.devicePixelRatio )
+document.body.appendChild(renderer.domElement)
 
-
-//Prepare the dome shader
-var uniforms = {
-	texture: {
-		value: new THREE.TextureLoader().load("../spark1.png")
-	}
-};
-
-var vertShader = `\
-varying vec3 vColor;
-void main() {
-	vColor = color;
-	vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
-	gl_PointSize = 0.2 * ( 300.0 / -mvPosition.z );
-	gl_Position = projectionMatrix * mvPosition;
-}`
-
-var fragShader = `\
-uniform sampler2D texture;
-varying vec3 vColor;
-void main() {
-	gl_FragColor = vec4( vColor, 1.0 );
-	gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
-}`
-
-var ledsmaterial = new THREE.ShaderMaterial({
-	uniforms: uniforms,
-	vertexShader: vertShader,
-	fragmentShader: fragShader,
-	blending: THREE.AdditiveBlending,
-	depthTest: false,
-	transparent: true,
-	vertexColors: true
-});
+// Initialize mouse raycasting
+var cursorX, cursorY
+var mouse = new THREE.Vector2()
+var raycaster = new THREE.Raycaster()
+document.onmousemove = function(e){
+    mouse.x = ( e.clientX / renderer.domElement.clientWidth ) * 2 - 1
+    mouse.y = -( e.clientY / renderer.domElement.clientHeight ) * 2 + 1
+}
 
 // Set up dome geometry
 var dome = new Dome(2, 2.5, scene)
-var pointsList = dome.verticies()
-console.log(pointsList.length)
+var pointsList = dome.vertices
 
-var colours = [];
+// Add helper axes
+var axesHelper = new THREE.AxesHelper(3)
+scene.add(axesHelper)
+gui.add(axesHelper, 'visible').name('Show Axes')
 
-for (var i = 0; i < pointsList.length; i++) {
-	colours.push(1.0, 1.0, 1.0)
-}
+// Set a default camera position
+camera.position.set(5,5,5)
 
-var led_particle_geo = new THREE.BufferGeometry();
-led_particle_geo.addAttribute('color', new THREE.Float32BufferAttribute(colours, 3).setDynamic(true));
-
-// Add dome points to THREE renderer
-var leds_destructured = pointsList.reduce((wip, led) => wip.concat(led));
-led_particle_geo.addAttribute('position', new THREE.Float32BufferAttribute(leds_destructured, 3));
-var ledparticles = new THREE.Points(led_particle_geo, ledsmaterial);
-ledparticles.rotation.x = -1 * Math.PI / 2;
-scene.add(ledparticles);
-
-var axesHelper = new THREE.AxesHelper(3);
-scene.add(axesHelper);
-
-gui.add(axesHelper, 'visible').name('Show Axes');
-
-camera.position.x = 5;
-// camera.position.y = 3;
-
-animate();
+// Do stuff
 
 function animate() {
-	requestAnimationFrame(animate);
-	controls.update();
-	render();
+	requestAnimationFrame(animate)
+	controls.update()
+	dome.update()
+	render()
 }
 
 function render() {
-	renderer.render(scene, camera);
+	renderer.render(scene, camera)
 }
+
+animate();

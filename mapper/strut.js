@@ -27,7 +27,7 @@ class Strut {
 		// Create geometry
         this._geometry = new THREE.BufferGeometry()
         let linePositions = new Float32Array(6)
-        let lineMaterial = new THREE.LineBasicMaterial({color: this.color, linewidth: 5,})
+        let lineMaterial = new THREE.LineBasicMaterial({color: this.color, linewidth: 3,})
         linePositions.set([this._start.x,this._start.y,this._start.z,this._end.x,this._end.y,this._end.z])
         this._geometry.addAttribute('position', new THREE.BufferAttribute(linePositions, 3))
         this._line = new THREE.Line(this._geometry, lineMaterial)

@@ -5,6 +5,7 @@ class Dome {
     constructor(order, size, scene){
         // Save the scale for later
         this.scale = size
+        // Currently hovered node for UI purposes
         this._hover = null
         
         // --== Calculate vertices ==--
@@ -77,14 +78,6 @@ class Dome {
         if(!this._edges.includes(e)){
             this._edges.push(e)
         }
-    }
-
-    get vertices(){
-        let verts = []
-        for(let v of this._verts){
-            verts.push([v.x,v.y,v.z])
-        }
-        return verts
     }
 
     getVerticesByMouse(){

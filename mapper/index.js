@@ -32,7 +32,6 @@ gui.add(axesHelper, 'visible').name('Show Axes')
 camera.position.set(5,5,5)
 
 // Do stuff
-
 function animate() {
 	requestAnimationFrame(animate)
 	controls.update()

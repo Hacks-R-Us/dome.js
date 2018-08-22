@@ -19,7 +19,7 @@ class Strut {
 		let roundedLen = Math.round(len*100000)/100000
 		let index = types.indexOf(roundedLen)
 		if(index == -1) 
-			throw new Error("No strut type with this length!")
+			throw new Error("No strut type with length " + roundedLen)
 		this.strutType = TYPES[index]
 	}
 

@@ -3,12 +3,14 @@ var VERT_HOVER = 0xcccccc
 
 class Dome {
     constructor(order, size, scene){
+
         // Save the scale for later
         this.scale = size
         // Currently hovered node for UI purposes
         this._hover = null
         
         // --== Calculate vertices ==--
+
         // _verts is "private" and its order has to remain static for edge mapping
         this._verts = initialize_sphere(order)
         // Make the top vertex the center of the pentagonal section & scale
@@ -16,8 +18,12 @@ class Dome {
         this._verts.forEach(v => v.applyAxisAngle(ax,35*(180 / Math.PI)).multiplyScalar(this.scale))
         // Cut off bottom of sphere to make DOME
         this._verts = this._verts.filter(v => v.y >= -0.1)
+        // Sort verts by y then x then z - gives consistent order
+        let base = this.scale * 10
+        this._verts.sort( (a,b) => (b.y-a.y)*base*base + (b.x-a.x)*base + (b.z-a.z))
 
         // --== Find edges ==--
+
         this._struts = []
         this._edges = []
         this._strut_types = []
@@ -27,12 +33,18 @@ class Dome {
                 this.addEdge([i,n])
             }
         }
+
+        // Sort edegs by startVert then endVert - gives consistent order
+        base = this._edges.length
+        this._edges.sort((a,b) => (b[0]-a[0])*base + (b[1]-a[1]))
         this._strut_types.sort()
+        console.log(this._strut_types)
         // Convert edges to struts
         for (let e of this._edges){
             e = JSON.parse("[" + e + "]")
             this._struts.push(new Strut(this._verts[e[0]], this._verts[e[1]], this._strut_types))
         }
+
         // Correct for F and A struts somehow being the same length (??)
         for(let i=0; i<this._verts.length; i++){
             let pentCorners = this.getNeighbors(i)
@@ -64,6 +76,7 @@ class Dome {
 
     get hover()   { return this._hover }
     set hover(vID){
+        (document.readyState === "complete") && (document.getElementById("node").innerHTML = vID)
         if(vID != this._hover){
             if (this.hover != null)
                 this._vertex_meshes[this.hover].material.color.setHex(VERT_COLOR)
@@ -91,6 +104,11 @@ class Dome {
             }
         }
         return vertices
+    }
+
+    getStrutByVerts(a,b){
+        let e = String([a,b].sort())
+        return this._struts[this._edges.indexOf(e)]
     }
 
     getNeighbors(vertexID){
@@ -124,18 +142,15 @@ class Dome {
             this.hover = null
         }
     }
-
-    // TODO: come up with good way to identify/order vertices
-    // i.e: how do sort this list??
 }
 
+// Check if a vector p already exists in list l
 function isNewPoint(l, p){
-    let found = l.find(function(x){
-        return x.equals(p)
-    })
+    let found = l.find(x => x.equals(p))
     return typeof found === "undefined"
 }
 
+// Split triangle into moar triangles
 function subdivide(vec1, vec2, vec3, sphere_points, depth){
     let v1 = vec1.clone()
     let v2 = vec2.clone()

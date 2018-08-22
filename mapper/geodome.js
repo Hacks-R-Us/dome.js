@@ -108,7 +108,11 @@ class Dome {
 
     getStrutByVerts(a,b){
         let e = String([a,b].sort())
-        return this._struts[this._edges.indexOf(e)]
+        let index = this._edges.indexOf(e)
+        if(index === -1){
+            throw new RangeError("Verts specified don't have a strut between them")
+        }
+        return this._struts[index]
     }
 
     getNeighbors(vertexID){

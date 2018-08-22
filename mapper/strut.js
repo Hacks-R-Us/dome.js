@@ -21,6 +21,8 @@ class Strut {
 		if(index == -1) 
 			throw new Error("No strut type with length " + roundedLen)
 		this.strutType = TYPES[index]
+
+		this._leds = []
 	}
 
 	initGeometry(){
@@ -34,15 +36,38 @@ class Strut {
         scene.add(this._line)
 	}
 
+	generateLEDPositions(){
+		for(let i = 0; i < this.numLeds; i++){
+			let LED = new THREE.Vector3()
+			LED.lerpVectors(this._start, this._end, (i/(this.numLeds-1))*0.9 + 0.05) // Add 5% padding either side
+			this._leds.push(LED)
+		}
+	}
+
+	reverse(){
+		if (this._leds === []){
+			this.generateLEDPositions()
+		}
+		this._leds.reverse()
+	}
+
 	// Properties
-	get leds()   {return STRUTS[this.strutType].leds}
+	get numLeds()   {return STRUTS[this.strutType].leds}
 	get color()  {return STRUTS[this.strutType].color}
 	set color(c) {
 		this._line.material.color.setHex(c)
 		this._line.material.needsUpdate = true
+		console.log("Setting color")
 	}
+	resetColor() {this.color = this.color}
 	set type(t) {
 		this.strutType = t
+	}
+	get ledPositions(){
+		if (this._leds.length == 0){
+			this.generateLEDPositions()
+		}
+		return this._leds.map(v => [v.x,v.y,v.z])
 	}
 	// Vectory properties
 	get start()  {return this._start.clone()}

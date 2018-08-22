@@ -4,7 +4,17 @@
 		<meta charset=utf-8>
 		<title>Dome.js</title>
 		<style>
-			body { margin: 0; }
+			body {
+				margin: 0;
+				font-family: monospace;
+			}
+			#info {
+				position: absolute;
+				top: 0;
+				left: 10px;
+				z-index: 100;
+				color: white;
+			}
 		</style>
 	</head>
 	<body>
@@ -13,6 +23,10 @@
 		<script src="../lib/dat.gui.min.js"></script>
 		<script src="strut.js"></script>
 		<script src="geodome.js"></script>
+		<script src="configuration.js"></script>
 		<script src="index.js"></script>
+		<div id="info">
+			<p>Node: <span id="node"></span></p>
+		</div>
 	</body>
 </html>

@@ -32,6 +32,12 @@ gui.add(axesHelper, 'visible').name('Show Axes')
 camera.position.set(5,5,5)
 
 // Do stuff
+var Conf = new Configurator()
+
+document.onmousedown = function(e){
+	if (dome.hover)
+    	Conf.addNode(dome.hover)
+}
 
 function animate() {
 	requestAnimationFrame(animate)

@@ -117,7 +117,7 @@ class Configurator {
 			config.led_list.push(...C.ledPositions)
 		}
 		$("#output textarea").val(JSON.stringify(config))
-		$("#output").slideDown()
+		$("#output").show()
 		return config
 	}
 

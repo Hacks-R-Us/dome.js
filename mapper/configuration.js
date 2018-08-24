@@ -54,7 +54,6 @@ class Controller {
 	get ledPositions(){
 		let positions = []
 		for(let i = 0; i < this._struts.length; i++){
-			let reversed = this._nodeList[i] > this._nodeList[i+1]
 			positions.push(...this._struts[i].ledPositions)
 		}
 		return positions

@@ -1,5 +1,5 @@
 var STRUTS = {
-	"A": {"length": .662, "leds": 30, "color": 0x880000},
+	"A": {"length": .662, "leds": 35, "color": 0x880000},
 	"B": {"length": .772, "leds": 41, "color": 0x000088},
 	"C": {"length": .772, "leds": 41, "color": 0x004400},
 	"D": {"length": .818, "leds": 44, "color": 0x888800},
@@ -48,8 +48,8 @@ class Strut {
 			LED.lerpVectors(this._start, this._end, (i/(this.numLeds-1))*0.9 + 0.05) // Add 5% padding either side
 			this._leds.push(LED)
 		}
-		if (this._leds === []){
-			this.generateLEDPositions()
+		if(this._reversed){
+			this._leds.reverse()
 		}
 	}
 
@@ -75,7 +75,7 @@ class Strut {
 		if (this._leds.length == 0){
 			this.generateLEDPositions()
 		}
-		return this._leds.map(v => [v.x,v.y,v.z])
+		return this._leds.map(v => [v.x,v.y,v.z].map(n => Math.round(n*10000)/10000))
 	}
 	// Vectory properties
 	get start()  {return this._start.clone()}

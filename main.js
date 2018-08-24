@@ -55,19 +55,18 @@ led_particle_geo.addAttribute('color', new THREE.Float32BufferAttribute(colours,
 // Load the LED geometry
 var loader = new THREE.FileLoader();
 loader.load(
-	'ledlist.json',
+	'dome.config',
 
 	// onLoad callback
 	function ( data ) {
-		var leds = JSON.parse(data);
+		var leds = JSON.parse(data).led_list;
+		console.log(leds)
 
 		var leds_destructured = leds.reduce((wip, led) => wip.concat(led));
 
 		led_particle_geo.addAttribute('position', new THREE.Float32BufferAttribute(leds_destructured, 3));
 
 		var ledparticles = new THREE.Points(led_particle_geo, ledsmaterial);
-
-		ledparticles.rotation.x = -1 * Math.PI / 2;
 
 		scene.add(ledparticles);
 	},

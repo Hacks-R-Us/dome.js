@@ -1,5 +1,5 @@
 var scene = new THREE.Scene()
-var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000)
+var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000)
 var controls = new THREE.OrbitControls(camera)
 var gui = new dat.GUI()
 gui.add(controls, 'autoRotate')
@@ -29,16 +29,15 @@ scene.add(axesHelper)
 gui.add(axesHelper, 'visible').name('Show Axes')
 
 // Set a default camera position
-camera.position.set(5,5,5)
+camera.position.set(3,2,3)
 
-// Do stuff
-var Conf = new Configurator()
-
+// Set up event handlers
 document.onmousedown = function(e){
-	if (dome.hover)
+	if (dome.hover || dome.hover === 0)
     	Conf.addNode(dome.hover)
 }
 
+// Set up animation & per frame functions
 function animate() {
 	requestAnimationFrame(animate)
 	controls.update()
@@ -50,4 +49,15 @@ function render() {
 	renderer.render(scene, camera)
 }
 
-animate();
+// Do stuff
+var Conf
+$(function(){
+	Conf = new Configurator()
+
+	$(document).on("click",".controller", function (event) {
+		let id = parseInt(event.target.id.slice(3))
+		Conf.currentController = id
+	});
+
+	animate();
+})

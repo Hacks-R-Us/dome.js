@@ -12,19 +12,27 @@ class Controller {
 
 	addNode(id){
 		// Add a new node onto the end of this string
-		this._nodeList.push(id)
 		let l = this._nodeList.length
-		if(l > 1){
+		if(l > 0){
 			let strut
 			try { 
-				strut = dome.getStrutByVerts(this._nodeList[l-2], this._nodeList[l-1])
+				strut = dome.getStrutByVerts(id, this._nodeList[l-1])
+				if(this._struts[this._struts.length - 1] === strut){
+					console.log("That's the same strut, silly")
+					return
+				}
 			} catch (ex){
+				console.log("Can't add that node!")
 				return
 			}
+			this._nodeList.push(id)
 			this._struts.push(strut)
+			strut.covered = true
 			if(this._highlighted !== false){
-				this._struts[this._struts.length - 1].color = this._highlighted
+				strut.color = this._highlighted
 			}
+		} else {
+			this._nodeList.push(id)
 		}
 	}
 
@@ -55,42 +63,42 @@ class Controller {
 
 class Configurator {
 	constructor(){
-		this.currentController = 0
-		this.options = []
 		this.controllers = []
-		this.controllerDropdown = gui.add(this, "currentController", this.options)
-		this.addController()
-		this.highlight(0)
-
+		for(let i=0; i < 5; i++) this.addController()
+		this.currentController = 0
+		this.symmetry = true
+		gui.add(this, 'symmetry').name('Symmetry')
 		gui.add(this, "addController")
-		this.controllerDropdown.onChange((id) => this.highlight(id))
+		gui.add(this, "export")
 	}
 
 	addController(){
 		let id = this.controllers.length
 		this.controllers.push(new Controller(id))
-		this.options.push(id)
-		this.updateDropdown(this.options)
-	}
-
-	updateDropdown(list){   
-	    let innerHTMLStr = "";
-	    for(var i=0; i<list.length; i++){
-	        var str = "<option value='" + list[i] + "'>" + list[i] + "</option>";
-	        innerHTMLStr += str;        
-	    }
-	    if (innerHTMLStr != "") 
-	    	this.controllerDropdown.domElement.firstChild.innerHTML = innerHTMLStr;
+		$("#controllers").append("<div class='controller' id='Con"+id+"'>"+id+"</div>")
+		this.currentController = id
+		if(this.symmetry){ 
+			for(let i=1; i < 5; i++){
+				this.controllers.push(new Controller(id+i))
+				$("#controllers").append("<div class='controller' id='Con"+(id+i)+"'>"+(id+i)+"</div>")
+			}
+		}
 	}
 
 	addNode(id){
 		this.controllers[this.currentController].addNode(id)
+		if(this.symmetry){
+			for(let i = 1; i < 5; i++){
+				let nodeID = dome.getVertByRotation(id,i)
+				this.controllers[this.currentController + i].addNode(nodeID)
+			}
+		}
 	}
 
-	highlight(id){
+	highlight(ids){
 		console.log
 		this.controllers.forEach(c => c.clearStrutColors())
-		this.controllers[id].setStrutColors()
+		ids.forEach(id => this.controllers[id].setStrutColors())
 	}
 
 	export(dome){
@@ -98,7 +106,7 @@ class Configurator {
 			Controllers: [],
 			led_list: []
 		}
-		for(let i of this.options){
+		for(let i = 0; i < this.controllers.length; i++){
 			let C = this.controllers[i]
 			config.Controllers.push({
 				id: i,
@@ -108,7 +116,18 @@ class Configurator {
 			console.log(C.ledPositions.length)
 			config.led_list.push(...C.ledPositions)
 		}
+		$("#output textarea").val(JSON.stringify(config))
+		$("#output").slideDown()
 		return config
+	}
+
+	get currentController(){
+		return this._currentController
+	}
+	set currentController(id){
+		this.highlight([id])
+		this._currentController = id
+		$("#controller").html(id)
 	}
 }
 

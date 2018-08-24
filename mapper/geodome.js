@@ -1,5 +1,6 @@
 var VERT_COLOR = 0x333333
 var VERT_HOVER = 0xcccccc
+var UP = new THREE.Vector3(0,1,0)
 
 class Dome {
     constructor(order, size, scene){
@@ -20,7 +21,7 @@ class Dome {
         this._verts = this._verts.filter(v => v.y >= -0.1)
         // Sort verts by y then x then z - gives consistent order
         let base = this.scale * 10
-        this._verts.sort( (a,b) => (b.y-a.y)*base*base + (b.x-a.x)*base + (b.z-a.z))
+        this._verts.sort((a,b) => (b.y-a.y)*base*base + (b.x-a.x)*base + (b.z-a.z))
 
         // --== Find edges ==--
 
@@ -112,6 +113,7 @@ class Dome {
         if(index === -1){
             throw new RangeError("Verts specified don't have a strut between them")
         }
+        if(String([a,b]) != e) this._struts[index].reverse()
         return this._struts[index]
     }
 
@@ -145,6 +147,12 @@ class Dome {
         } else {
             this.hover = null
         }
+    }
+
+    getVertByRotation(vert, rotationAmount){
+        let thisPos = this._verts[vert].clone()
+        thisPos.applyAxisAngle(UP, (Math.PI*2/5)*rotationAmount)
+        return this._verts.indexOf(this._verts.find(v => v.distanceToSquared(thisPos) < 0.1))
     }
 }
 

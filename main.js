@@ -60,7 +60,6 @@ loader.load(
 	// onLoad callback
 	function ( data ) {
 		var leds = JSON.parse(data).led_list;
-		console.log(leds)
 
 		var leds_destructured = leds.reduce((wip, led) => wip.concat(led));
 
@@ -84,31 +83,36 @@ animate();
 
 function animate() {
 	requestAnimationFrame( animate );
-                controls.update();
+    controls.update();
 	render();
 }
 
-function updateColours() {
-	// Construct a sort-of sinusoidal wave pattern
+var event_data = new EventSource("/sub");
+var dome_data = "";
+var receiving_domeage = false;
+
+event_data.onmessage = function (event) {
+	receiving_domeage = true;
+	dome_data = event.data;
+};
+
+function handleDomeData() {
+	// Handle an incoming packet of base64-encoded domey goodness
+	if (!receiving_domeage) {
+		return;
+	}
+	var dome_binary = atob(dome_data);
+
 	var colours = led_particle_geo.attributes.color.array;
 
-	var wave_hz = 1;
-	var r_offset = 0;
-	var g_offset = 2 * Math.PI / 3;
-	var b_offset = 4 * Math.PI / 3;
-
-	for ( var i = 0; i < ledcount; i++ ) {
-		relativeTime = (Date.now() / 1000) * (2 * Math.PI * wave_hz) + (2 * Math.PI * i / ledcount);
-
-		var randVal = Math.random();
-		colours[3 * i] = Math.sin(relativeTime + r_offset) / 2 + 1;
-		colours[3 * i + 1] = Math.sin(relativeTime + g_offset) / 2 + 1;
-		colours[3 * i + 2] = Math.sin(relativeTime + b_offset) / 2 + 1;
+	for ( var i = 0; i < ledcount * 3; i++ ) {
+		colours[i] = dome_binary.charCodeAt(i) / 255;
 	}
 	led_particle_geo.attributes.color.needsUpdate = true;
 }
 
+
 function render() {
-	updateColours();
+	handleDomeData();
 	renderer.render( scene, camera );
 }
